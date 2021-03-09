@@ -115,6 +115,26 @@ run_coloc <- function(summary_data, susie.args)
 	return(list(d1=d1, d2=d2, s1=s1, s2=s2, res=res))
 }
 
+view_res <- function(res)
+{
+	out <- lapply(1:2, function(x)
+	{
+		cs <- summary(res[[paste0("s", x)]])$cs
+		res[[paste0("d", x)]]$susie <- 1:length(res[[paste0("d", x)]]$beta) %in% cs$variable
+		tibble(
+			pos=res[[paste0("d", x)]]$position,
+			pvalues=res[[paste0("d", x)]]$pvalues,
+			susie=res[[paste0("d", x)]]$susie,
+			trait=x
+		)
+	}) %>% bind_rows() %>%
+	ggplot(., aes(pos, -log10(pvalues))) +
+	geom_point(aes(colour=susie)) +
+	facet_grid(trait ~ .)
+	print(out)
+}
+
+
 
 evaluate_performance <- function(input, output, regionsize)
 {
@@ -136,47 +156,51 @@ simulation <- function(param, ld)
 	}
 	ss2 <- simulate_summary_data(ld$ld, map2, param$nid)
 	param$coloc_result <- run_coloc(ss1, ss2, param$coverage, "sparse")$summary %>% {which.max(.[-1])}
-	return(param)
+	result <- evaluate_performance(...)
+	return(result)
 }
 
 
-view_res <- function(res)
-{
-	out <- lapply(1:2, function(x)
-	{
-		cs <- summary(res[[paste0("s", x)]])$cs
-		res[[paste0("d", x)]]$susie <- 1:length(res[[paste0("d", x)]]$beta) %in% cs$variable
-		tibble(
-			pos=res[[paste0("d", x)]]$position,
-			pvalues=res[[paste0("d", x)]]$pvalues,
-			susie=res[[paste0("d", x)]]$susie,
-			trait=x
-		)
-	}) %>% bind_rows() %>%
-	ggplot(., aes(pos, -log10(pvalues))) +
-	geom_point(aes(colour=susie)) +
-	facet_grid(trait ~ .)
-	print(out)
-}
 
 ###################
+
+source("scripts/simulate.r")
 
 args <- commandArgs(T)
 ldobjfile <- args[1]
 
-ldobj <- readRDS(ldobjfile)
-ldobj <- list(ld=ldobj$ld[1:1000, 1:1000], map=ldobj$map[1:1000,], nref=ldobj$nref)
 
-source("scripts/simulate.r")
-d <- summary_data(ldobj, 1000, 1000, 0, 0, 1, 0.8, 0.8, radius=20000)
+simulation_parameters <- expand.grid(
+	ldregions = c("1_123124_1232423", "2_123124_1232423"),
+	ndistinct1 = c(1,2,3),
+	ndistinct2 = c(1,2,3),
+	nshared = c(1,2,3),
+	nid = 10000,
+	nrep = 1:100,
+	h2_1 = c(0.1, 0.8),
+	h2_2 = c(0.1, 0.8),
+	S_1 = c(),
+	S_2 = c()
+)
 
-res <- run_coloc(d, susie.args=list(nref=ldobj$nref, check_R=FALSE))
+l <- list()
+for(i in 1:nrow(simulation_parameters))
+{
+	ldobj <- readRDS(ldobjfile)
+	l[[i]] <- simulation(simulation_parameters[i,], ldobj)
+}
 
 
-print(res$res$summary)
-sensitivity(res$res,"H4 > 0.9",row=1,dataset1=res$d1,dataset2=res$d2)
-sensitivity(res$res,"H4 > 0.9",row=2,dataset1=res$d1,dataset2=res$d2)
 
-view_res(res)
+
+# ldobj <- list(ld=ldobj$ld[1:1000, 1:1000], map=ldobj$map[1:1000,], nref=ldobj$nref)
+# d <- summary_data(ldobj, 1000, 1000, 0, 0, 1, 0.8, 0.8, radius=20000)
+# res <- run_coloc(d, susie.args=list(nref=ldobj$nref, check_R=FALSE))
+
+# print(res$res$summary)
+# sensitivity(res$res,"H4 > 0.9",row=1,dataset1=res$d1,dataset2=res$d2)
+# sensitivity(res$res,"H4 > 0.9",row=2,dataset1=res$d1,dataset2=res$d2)
+
+# view_res(res)
 
 
