@@ -116,6 +116,12 @@ run_coloc <- function(summary_data, susie.args)
 }
 
 
+evaluate_performance <- function(input, output, regionsize)
+{
+	# count how many distinct and shared causal variants for the two traits within a given window size
+}
+
+
 simulation <- function(param, ld)
 {
 	ld <- ld[[param$region]]

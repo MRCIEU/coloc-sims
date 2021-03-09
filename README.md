@@ -11,6 +11,13 @@ Create `config.json` that specifies where the data and results directories are
 }
 ```
 
+Install the R packages using
+
+```r
+renv::renv_restore()
+```
+
+
 ## Running simulations
 
 Run `snakemake`.
