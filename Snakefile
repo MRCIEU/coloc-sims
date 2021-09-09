@@ -21,7 +21,7 @@ rule run_simulations:
 	output:
 		'{RESULTSDIR}/res.rdata'
 	shell:
-		'Rscript scripts/simulate.r {data.output}'
+		'Rscript scripts/run_simulation.r ...'
 
 
 rule analysis:

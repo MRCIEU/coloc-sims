@@ -80,7 +80,25 @@ summary_data <- function(ldobj, nid1, nid2, ndistinct1, ndistinct2, nshared, h2_
 	return(list(trait1=trait1, trait2=trait2, ld=ld))
 }
 
-run_coloc <- function(summary_data, susie.args)
+
+# TODO
+# Does the tophit in dataset 1 replicate at some p-value threshold in dataset 2?
+run_simple <- function(summary_data)
+{
+
+}
+
+
+
+# TODO
+# As in run_coloc_susie but just for straightforward coloc analysis
+run_coloc <- function(summary_data)
+{
+
+}
+
+
+run_coloc_susie <- function(summary_data, susie.args)
 {
 	d1 <- list(
 		pvalues = summary_data$trait1$pval,
@@ -115,6 +133,12 @@ run_coloc <- function(summary_data, susie.args)
 	return(list(d1=d1, d2=d2, s1=s1, s2=s2, res=res))
 }
 
+# TODO
+run_pwcoco <- function(summary_data, other_arguments)
+{
+
+}
+
 view_res <- function(res)
 {
 	out <- lapply(1:2, function(x)
@@ -134,11 +158,28 @@ view_res <- function(res)
 	print(out)
 }
 
-
-
+# TODO
 evaluate_performance <- function(input, output, regionsize)
 {
 	# count how many distinct and shared causal variants for the two traits within a given window size
+
+	# fine mapping performance
+	# - how many independent causal variants
+	# - how many in the right region
+	# - how many true right causal variant
+
+	# coloc performance
+	# - how many regions correctly shared
+	# - how many regions correctly distinct
+
+	# defining region
+	# - the causal variant is within r2 > 0.9 of the true causal variant
+
+	# evaluation
+	# - AUC for finemapping (by region / by causal variant)
+	# - AUC for coloc (by region)
+	# - group by sample size, complexity, h2, region size
+	
 }
 
 
@@ -156,51 +197,9 @@ simulation <- function(param, ld)
 	}
 	ss2 <- simulate_summary_data(ld$ld, map2, param$nid)
 	param$coloc_result <- run_coloc(ss1, ss2, param$coverage, "sparse")$summary %>% {which.max(.[-1])}
+	# TODO
 	result <- evaluate_performance(...)
 	return(result)
 }
-
-
-
-###################
-
-source("scripts/simulate.r")
-
-args <- commandArgs(T)
-ldobjfile <- args[1]
-
-
-simulation_parameters <- expand.grid(
-	ldregions = c("1_123124_1232423", "2_123124_1232423"),
-	ndistinct1 = c(1,2,3),
-	ndistinct2 = c(1,2,3),
-	nshared = c(1,2,3),
-	nid = 10000,
-	nrep = 1:100,
-	h2_1 = c(0.1, 0.8),
-	h2_2 = c(0.1, 0.8),
-	S_1 = c(),
-	S_2 = c()
-)
-
-l <- list()
-for(i in 1:nrow(simulation_parameters))
-{
-	ldobj <- readRDS(ldobjfile)
-	l[[i]] <- simulation(simulation_parameters[i,], ldobj)
-}
-
-
-
-
-# ldobj <- list(ld=ldobj$ld[1:1000, 1:1000], map=ldobj$map[1:1000,], nref=ldobj$nref)
-# d <- summary_data(ldobj, 1000, 1000, 0, 0, 1, 0.8, 0.8, radius=20000)
-# res <- run_coloc(d, susie.args=list(nref=ldobj$nref, check_R=FALSE))
-
-# print(res$res$summary)
-# sensitivity(res$res,"H4 > 0.9",row=1,dataset1=res$d1,dataset2=res$d2)
-# sensitivity(res$res,"H4 > 0.9",row=2,dataset1=res$d1,dataset2=res$d2)
-
-# view_res(res)
 
 
